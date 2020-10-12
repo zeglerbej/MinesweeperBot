@@ -67,7 +67,7 @@ namespace MinesweeperBot
                 if (IsGameFinished()) break;
             }
             RenderBoard();
-            if (freeFieldsCount == 0 && minesLeft == 0) label3.Text = "Success!";
+            if (failurePoint.X == -1 && failurePoint.Y == -1) label3.Text = "Success!";
             else label3.Text = "Failure!";
         }
         private void MakeFirstMove()
