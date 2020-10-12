@@ -67,6 +67,8 @@ namespace MinesweeperBot
                 if (IsGameFinished()) break;
             }
             RenderBoard();
+            if (freeFieldsCount == 0 && minesLeft == 0) label3.Text = "Success!";
+            else label3.Text = "Failure!";
         }
         private void MakeFirstMove()
         {
@@ -343,6 +345,7 @@ namespace MinesweeperBot
             pictureBox1.Refresh();
             label1.Text = $"Free fields: {freeFieldsCount}";
             label2.Text = $"Mines left: {minesLeft}";
+            label3.Text = "";
         }
 
         private void RenderDividingLines()
