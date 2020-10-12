@@ -17,6 +17,8 @@ namespace MinesweeperBot
         private bool firstMove;
         private bool failure;
         private Point failurePoint;
+        private int minesLeft;
+        private int freeFieldsCount;
 
         private Dictionary<int, string> imageDict;
         public Form1()
@@ -26,9 +28,7 @@ namespace MinesweeperBot
             pictureBox1.Width = Params.columns * Params.squareSize;
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             graphics = Graphics.FromImage(pictureBox1.Image);
-            board = new Board();
-            firstMove = true;
-            failure = false;
+            Reset();
 
             imageDict = new Dictionary<int, string>();
             imageDict.Add(-1, "mine");
@@ -86,6 +86,7 @@ namespace MinesweeperBot
                 return;
             }
             board.Fields[x, y].Clicked = true;
+            --freeFieldsCount;
             if (board.Fields[x, y].HasMine)
             {
                 //board.Fields[x, y].Clicked = false;
@@ -116,6 +117,7 @@ namespace MinesweeperBot
                     }
                 }
             }
+            freeFieldsCount = GetFreeFields(false).Count();
         }
 
         private void TraverseBoard()
@@ -233,7 +235,7 @@ namespace MinesweeperBot
                         }
                         if(1.0f - chance > bestChance)
                         {
-                            bestChance = chance;
+                            bestChance = 1.0f - chance;
                             bestIsNumber = true;
                             bestPoint = neighborhood.FreeNeighbors[k];
                         }
@@ -246,14 +248,60 @@ namespace MinesweeperBot
                 }
                 if (Math.Abs(bestChance - 1.0f) < 0.0000001f) break;
             }
+            List<Point> freeFields = new List<Point>();
+            if (bestPoint.X == -1 && bestPoint.Y == -1) freeFields = GetFreeFields(false);
+            else freeFields = GetFreeFields(true);
+
+            float chanceForRandomField = 1.0f - ((float)minesLeft / freeFieldsCount);
+            if(chanceForRandomField > bestChance)
+            {
+                bestIsNumber = true;
+                Random rand = new Random(Guid.NewGuid().GetHashCode());
+                int ind = rand.Next(freeFields.Count);
+                bestPoint = freeFields[ind];
+            }
             if (bestIsNumber) LeftClickField(bestPoint.X, bestPoint.Y);
             else PlantFlag(bestPoint.X, bestPoint.Y);
+        }
+
+        private List<Point> GetFreeFields(bool checkNeighborhood)
+        {
+            List<Point> freeFields = new List<Point>();
+            for (int i = 0; i < Params.columns; ++i)
+            {
+                for (int j = 0; j < Params.rows; ++j)
+                {
+                    if (board.Fields[i, j].Clicked) continue;
+                    if (checkNeighborhood)
+                    {
+                        Neighborhood neighborhood = board.GetNeighborhood(i, j);
+                        bool corner = (i == 0 && j == 0) ||
+                            (i == Params.columns - 1 && j == 0) ||
+                            (i == 0 && j == Params.rows - 1) ||
+                            (i == Params.columns - 1 && j == Params.rows - 1);
+                        bool border = i == 0 ||
+                            i == Params.columns - 1 ||
+                            j == 0 ||
+                            j == Params.rows - 1;
+                        if (corner)
+                            if (neighborhood.FreeNeighbors.Count != 3) continue;
+                        if(!corner && border)
+                            if (neighborhood.FreeNeighbors.Count != 5) continue;
+                        if(!corner && !border)
+                            if(neighborhood.FreeNeighbors.Count != 8) continue;
+                    }
+                    freeFields.Add(new Point(i,j));
+                }
+            }
+            return freeFields;
         }
         public void PlantFlag(int x, int y)
         {
             if (board.Fields[x, y].Clicked) return;
             board.Fields[x, y].Clicked = true;
             board.Fields[x, y].Flag = true;
+            --minesLeft;
+            --freeFieldsCount;
         }
         
 
@@ -263,6 +311,8 @@ namespace MinesweeperBot
             failure = false;
             failurePoint = new Point(-1, -1);
             board = new Board();
+            minesLeft = Params.minesCount;
+            freeFieldsCount = Params.rows * Params.columns - Params.minesCount;
         }
 
         private bool IsGameFinished()
@@ -291,6 +341,8 @@ namespace MinesweeperBot
             RenderFields();
             RenderDividingLines();
             pictureBox1.Refresh();
+            label1.Text = $"Free fields: {freeFieldsCount}";
+            label2.Text = $"Mines left: {minesLeft}";
         }
 
         private void RenderDividingLines()
@@ -311,7 +363,7 @@ namespace MinesweeperBot
         }
 
         private void RenderFields()
-        {
+        {           
             for (int i = 0; i < Params.columns; ++i)
             {
                 for (int j = 0; j < Params.rows; ++j)
