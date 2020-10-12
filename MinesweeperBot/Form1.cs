@@ -314,7 +314,7 @@ namespace MinesweeperBot
             failurePoint = new Point(-1, -1);
             board = new Board();
             minesLeft = Params.minesCount;
-            freeFieldsCount = Params.rows * Params.columns - Params.minesCount;
+            freeFieldsCount = Params.rows * Params.columns;
         }
 
         private bool IsGameFinished()
