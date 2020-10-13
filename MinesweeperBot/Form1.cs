@@ -253,11 +253,19 @@ namespace MinesweeperBot
             List<Point> freeFields = new List<Point>();
             if (bestPoint.X == -1 && bestPoint.Y == -1) freeFields = GetFreeFields(false);
             else freeFields = GetFreeFields(true);
-            
-            float chanceForRandomField = 1.0f - ((float)minesLeft / freeFieldsCount);
+
+            float mineChance = (float)minesLeft / freeFieldsCount;
+            float chanceForRandomField = 1.0f - mineChance;
             if(freeFields.Count > 0 && chanceForRandomField > bestChance)
             {
                 bestIsNumber = true;
+                Random rand = new Random(Guid.NewGuid().GetHashCode());
+                int ind = rand.Next(freeFields.Count);
+                bestPoint = freeFields[ind];
+            }
+            if(freeFields.Count > 0 && mineChance > bestChance)
+            {
+                bestIsNumber = false;
                 Random rand = new Random(Guid.NewGuid().GetHashCode());
                 int ind = rand.Next(freeFields.Count);
                 bestPoint = freeFields[ind];
