@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -351,6 +352,10 @@ namespace MinesweeperBot
             RenderFields();
             RenderDividingLines();
             pictureBox1.Refresh();
+            ChangeLabels();
+        }
+        private void ChangeLabels()
+        {
             label1.Text = $"Free fields: {freeFieldsCount}";
             label2.Text = $"Mines left: {minesLeft}";
             label3.Text = "";
